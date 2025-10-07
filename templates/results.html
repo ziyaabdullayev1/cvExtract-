@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extraction Results - CVExtract Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar-left {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .top-bar-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .top-bar-right strong {
+            color: #111827;
+            font-weight: 600;
+        }
+        
+        .info-badge {
+            background: #e0e7ff;
+            color: #4f46e5;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .link-btn {
+            color: #6366f1;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #4f46e5;
+        }
+
+        .title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: calc(100vh - 60px);
+            gap: 0;
+        }
+
+        .left-panel {
+            background: #2d3748;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .right-panel {
+            background: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e5e7eb;
+            padding: 0 30px;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            color: #6366f1;
+            border-bottom-color: #6366f1;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            height: calc(100vh - 120px);
+        }
+
+        .tab-pane {
+            display: none;
+            height: 100%;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        #raw {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        /* PDF Viewer */
+        #pdf-viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Preview Panel */
+        .preview-section {
+            margin-bottom: 30px;
+        }
+
+        .preview-section h3 {
+            font-size: 1.1rem;
+            color: #111827;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 12px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+            min-width: 120px;
+        }
+
+        .info-value {
+            color: #6b7280;
+        }
+
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .skill-tag {
+            background: #eff6ff;
+            color: #1e40af;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .experience-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fefefe;
+            border-left: 3px solid #6366f1;
+        }
+
+        .experience-title {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 5px;
+        }
+
+        .experience-company {
+            color: #6366f1;
+            margin-bottom: 5px;
+        }
+
+        .experience-period {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .experience-responsibilities {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .experience-responsibilities li {
+            padding-left: 20px;
+            position: relative;
+            margin-bottom: 5px;
+            color: #4b5563;
+            font-size: 0.9rem;
+        }
+
+        .experience-responsibilities li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #6366f1;
+        }
+
+        /* Raw JSON View */
+        .json-container {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            max-height: calc(100vh - 240px);
+        }
+
+        .json-container pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .json-key {
+            color: #93c5fd;
+        }
+
+        .json-string {
+            color: #86efac;
+        }
+
+        .json-number {
+            color: #fbbf24;
+        }
+
+        .json-boolean {
+            color: #f472b6;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .stat-badge {
+            background: #eff6ff;
+            color: #1e40af;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <a href="/" class="link-btn">← All Files</a>
+            <a href="/" class="btn">Back to Upload</a>
+        </div>
+        <div class="title">Extraction Results</div>
+        <div class="top-bar-right">
+            <span>Type: <span class="info-badge">pdf</span></span>
+            <span>Pages: <span class="info-badge">{{ page_count }}</span></span>
+            <span>Time: <span class="info-badge">{{ processing_time }}s</span></span>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <iframe id="pdf-viewer" src="/uploads/{{ filename }}"></iframe>
+        </div>
+
+        <div class="right-panel">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('preview')">Preview</div>
+                <div class="tab" onclick="switchTab('raw')">Raw</div>
+            </div>
+
+            <div class="tab-content">
+                <div id="preview" class="tab-pane active">
+                    <div class="action-buttons">
+                        <button class="btn" onclick="downloadJSON()">📥 Download JSON</button>
+                        <button class="btn-success btn" onclick="downloadMarkdown()">📝 Download Markdown</button>
+                        <button class="btn-secondary btn" onclick="copyJSON()">📋 Copy JSON</button>
+                    </div>
+
+                    {% if is_structured %}
+                    <!-- Structured JSON - Show as formatted preview -->
+                    <div class="preview-section">
+                        <h3>🔧 Custom Structured Data</h3>
+                        <div class="info-card" style="background: #f0fdf4; border: 1px solid #86efac;">
+                            <p style="color: #166534; margin-bottom: 15px;">
+                                ✓ Data extracted using your custom schema
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="preview-section">
+                        <h3>📋 Extracted Fields</h3>
+                        {% for key, value in cv_data.items() %}
+                        <div class="info-card">
+                            <div class="info-row">
+                                <div class="info-label">{{ key }}:</div>
+                                <div class="info-value">
+                                    {% if value is mapping %}
+                                        <pre style="margin: 10px 0; padding: 10px; background: #f9fafb; border-radius: 4px; font-size: 0.9rem;">{{ value | tojson(indent=2) }}</pre>
+                                    {% elif value is iterable and value is not string %}
+                                        {% if value and value[0] is mapping %}
+                                            <pre style="margin: 10px 0; padding: 10px; background: #f9fafb; border-radius: 4px; font-size: 0.9rem;">{{ value | tojson(indent=2) }}</pre>
+                                        {% else %}
+                                            {{ value | join(', ') if value else 'N/A' }}
+                                        {% endif %}
+                                    {% else %}
+                                        {{ value if value else 'N/A' }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% else %}
+                    <!-- Standard Flat JSON - Show detailed preview -->
+                    <div class="preview-section">
+                        <h3>👤 Personal Information</h3>
+                        <div class="info-card">
+                            <div class="info-row">
+                                <div class="info-label">Name:</div>
+                                <div class="info-value">{{ cv_data.personal_info.get('name', 'N/A') }}</div>
+                            </div>
+                            {% if cv_data.personal_info.contact.get('email') %}
+                            <div class="info-row">
+                                <div class="info-label">Email:</div>
+                                <div class="info-value">{{ cv_data.personal_info.contact.email }}</div>
+                            </div>
+                            {% endif %}
+                            {% if cv_data.personal_info.contact.get('phone') %}
+                            <div class="info-row">
+                                <div class="info-label">Phone:</div>
+                                <div class="info-value">{{ cv_data.personal_info.contact.phone }}</div>
+                            </div>
+                            {% endif %}
+                            {% if cv_data.personal_info.contact.get('location') %}
+                            <div class="info-row">
+                                <div class="info-label">Location:</div>
+                                <div class="info-value">{{ cv_data.personal_info.contact.location }}</div>
+                            </div>
+                            {% endif %}
+                            {% if cv_data.personal_info.contact.get('linkedin') %}
+                            <div class="info-row">
+                                <div class="info-label">LinkedIn:</div>
+                                <div class="info-value">{{ cv_data.personal_info.contact.linkedin }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if cv_data.get('summary') %}
+                    <div class="preview-section">
+                        <h3>📝 Summary</h3>
+                        <div class="info-card">
+                            <p>{{ cv_data.summary }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if cv_data.get('skills') %}
+                    <div class="preview-section">
+                        <h3>🎯 Skills <span class="stat-badge">{{ cv_data.skills|length }} found</span></h3>
+                        <div class="skills-list">
+                            {% for skill in cv_data.skills %}
+                            <span class="skill-tag">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if cv_data.get('languages') %}
+                    <div class="preview-section">
+                        <h3>🌐 Languages</h3>
+                        <div class="skills-list">
+                            {% for lang in cv_data.languages %}
+                            <span class="skill-tag">{{ lang }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if cv_data.get('certifications') %}
+                    <div class="preview-section">
+                        <h3>🏆 Certifications <span class="stat-badge">{{ cv_data.certifications|length }} found</span></h3>
+                        <div class="info-card">
+                            {% for cert in cv_data.certifications[:10] %}
+                            <div class="info-row">
+                                <div class="info-value">• {{ cert }}</div>
+                            </div>
+                            {% endfor %}
+                            {% if cv_data.certifications|length > 10 %}
+                            <div class="info-row">
+                                <div class="info-value"><em>... and {{ cv_data.certifications|length - 10 }} more</em></div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if cv_data.get('education') %}
+                    <div class="preview-section">
+                        <h3>🎓 Education</h3>
+                        {% for edu in cv_data.education %}
+                        <div class="info-card">
+                            {% if edu.get('degree') %}
+                            <div class="info-row">
+                                <div class="info-label">Degree:</div>
+                                <div class="info-value">{{ edu.degree }}</div>
+                            </div>
+                            {% endif %}
+                            {% if edu.get('institution') %}
+                            <div class="info-row">
+                                <div class="info-label">Institution:</div>
+                                <div class="info-value">{{ edu.institution }}</div>
+                            </div>
+                            {% endif %}
+                            {% if edu.get('period') %}
+                            <div class="info-row">
+                                <div class="info-label">Period:</div>
+                                <div class="info-value">{{ edu.period }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if cv_data.get('experience') %}
+                    <div class="preview-section">
+                        <h3>💼 Work Experience <span class="stat-badge">{{ cv_data.experience|length }} positions</span></h3>
+                        {% for exp in cv_data.experience %}
+                        <div class="experience-item">
+                            <div class="experience-title">{{ exp.position }}</div>
+                            <div class="experience-company">{{ exp.company }}</div>
+                            <div class="experience-period">{{ exp.period }}{% if exp.location %} • {{ exp.location }}{% endif %}</div>
+                            {% if exp.responsibilities %}
+                            <ul class="experience-responsibilities">
+                                {% for resp in exp.responsibilities[:5] %}
+                                <li>{{ resp }}</li>
+                                {% endfor %}
+                                {% if exp.responsibilities|length > 5 %}
+                                <li><em>... and {{ exp.responsibilities|length - 5 }} more</em></li>
+                                {% endif %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% endif %}
+                </div>
+
+                <div id="raw" class="tab-pane">
+                    <div class="action-buttons">
+                        <button class="btn" onclick="downloadJSON()">📥 Download JSON</button>
+                        <button class="btn-success btn" onclick="downloadMarkdown()">📝 Download Markdown</button>
+                        <button class="btn-secondary btn" onclick="copyJSON()">📋 Copy JSON</button>
+                    </div>
+                    <div class="json-container">
+                        <pre id="json-content">{{ cv_data_json }}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Remove active class from all tabs and panes
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+            // Add active class to selected tab and pane
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function downloadJSON() {
+            window.location.href = '/results/{{ filename }}/download';
+        }
+
+        function downloadMarkdown() {
+            window.location.href = '/results/{{ filename }}/download/markdown';
+        }
+
+        function copyJSON() {
+            const jsonText = document.getElementById('json-content').textContent;
+            navigator.clipboard.writeText(jsonText).then(() => {
+                alert('JSON copied to clipboard!');
+            });
+        }
+
+        // Syntax highlighting for JSON
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        // Apply syntax highlighting
+        window.addEventListener('DOMContentLoaded', () => {
+            const jsonContent = document.getElementById('json-content');
+            if (jsonContent) {
+                const highlighted = syntaxHighlight(jsonContent.textContent);
+                jsonContent.innerHTML = highlighted;
+            }
+        });
+    </script>
+</body>
+</html>
+
