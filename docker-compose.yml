@@ -1,49 +1,22 @@
 version: '3.8'
 
 services:
-  cvextract:
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    container_name: cvextract-pro
+  cvparser-api:
+    build: .
+    container_name: cvparser-api
     ports:
       - "5000:5000"
     volumes:
-      # Mount uploads and results for persistence
       - ./uploads:/app/uploads
       - ./results:/app/results
-      # Optional: Mount logs for debugging
       - ./logs:/app/logs
     environment:
       - FLASK_ENV=production
       - PYTHONUNBUFFERED=1
-      - MAX_CONTENT_LENGTH=16777216  # 16MB max file size
-      - UPLOAD_FOLDER=/app/uploads
-      - RESULTS_FOLDER=/app/results
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
-    security_opt:
-      - no-new-privileges:true
-    read_only: false
-    tmpfs:
-      - /tmp
-      - /var/tmp
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 

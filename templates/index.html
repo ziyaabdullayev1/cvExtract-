@@ -399,6 +399,70 @@
         </div>
 
         <div class="output-format">
+            <h2>Select Parser Engine</h2>
+            <div class="format-options">
+                <div class="format-card selected" data-parser="original" onclick="selectParser('original')">
+                    <div class="icon">📚</div>
+                    <h3>Original (pdfplumber)</h3>
+                    <p>Stable parser - tested and proven</p>
+                </div>
+                <div class="format-card" data-parser="fast" onclick="selectParser('fast')">
+                    <div class="icon">⚡</div>
+                    <h3>Fast (PyMuPDF)</h3>
+                    <p>~12x faster - optimized for speed</p>
+                </div>
+                <div class="format-card" data-parser="groq" onclick="selectParser('groq')">
+                    <div class="icon">🚀</div>
+                    <h3>Groq (AI - Recommended)</h3>
+                    <p>Super fast AI - 2-5s processing time</p>
+                </div>
+                <div class="format-card" data-parser="llm" onclick="selectParser('llm')">
+                    <div class="icon">🤖</div>
+                    <h3>LLM (Ollama Local)</h3>
+                    <p>Local AI - privacy focused</p>
+                </div>
+                <div class="format-card" data-parser="docling" onclick="selectParser('docling')">
+                    <div class="icon">🧠</div>
+                    <h3>Docling (IBM AI)</h3>
+                    <p>Advanced layout understanding</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="schema-editor" id="groq-model-selector">
+            <h3>Groq AI Configuration</h3>
+            <p>Super-fast cloud AI processing (2-5 seconds). API key is pre-configured.</p>
+            
+            <div style="margin-top: 20px;">
+                <label for="groq-model" style="font-weight: 600; margin-bottom: 10px; display: block;">Groq Model:</label>
+                <select id="groq-model" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;">
+                    <option value="llama-3.3-70b-versatile" selected>Llama 3.3 70B (Best Quality)</option>
+                    <option value="llama3-70b-8192">Llama 3 70B</option>
+                    <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                    <option value="llama3-8b-8192">Llama 3 8B (Fastest)</option>
+                </select>
+                <p style="margin-top: 10px; color: #6b7280; font-size: 0.9rem;">⚡ Groq provides 10x faster processing than local AI</p>
+            </div>
+        </div>
+
+        <div class="schema-editor" id="llm-model-selector">
+            <h3>Ollama Model Selection</h3>
+            <p>Choose the local Ollama model to use for private CV extraction.</p>
+            
+            <div style="margin-top: 20px;">
+                <label for="llm-model" style="font-weight: 600; margin-bottom: 10px; display: block;">Ollama Model:</label>
+                <select id="llm-model" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 1rem;">
+                    <option value="llama3.1" selected>Llama 3.1</option>
+                    <option value="llama3">Llama 3</option>
+                    <option value="mistral">Mistral</option>
+                    <option value="phi3">Phi-3 (Recommended - Fast)</option>
+                    <option value="gemma2">Gemma 2</option>
+                </select>
+                <p style="margin-top: 10px; color: #6b7280; font-size: 0.9rem;">Make sure the selected model is installed in Ollama</p>
+            </div>
+        </div>
+
+        <div class="output-format">
             <h2>Select Output Format</h2>
             <div class="format-options">
                 <div class="format-card selected" data-format="flat-json" onclick="selectFormat('flat-json')">
@@ -483,6 +547,32 @@ experience, position, company</pre>
     <script>
         let selectedFile = null;
         let selectedFormat = 'flat-json';
+        let selectedParser = 'original';
+
+        function selectParser(parser) {
+            selectedParser = parser;
+            
+            // Remove selected class from all parser cards
+            document.querySelectorAll('[data-parser]').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selected class to chosen card
+            document.querySelector(`[data-parser="${parser}"]`).classList.add('selected');
+            
+            // Show/hide model selectors
+            const groqModelSelector = document.getElementById('groq-model-selector');
+            const llmModelSelector = document.getElementById('llm-model-selector');
+            
+            groqModelSelector.classList.remove('active');
+            llmModelSelector.classList.remove('active');
+            
+            if (parser === 'groq') {
+                groqModelSelector.classList.add('active');
+            } else if (parser === 'llm') {
+                llmModelSelector.classList.add('active');
+            }
+        }
 
         function selectFormat(format) {
             selectedFormat = format;
@@ -600,6 +690,20 @@ experience, position, company</pre>
             const formData = new FormData();
             formData.append('file', selectedFile);
             formData.append('format', selectedFormat);
+            formData.append('parser_type', selectedParser);  // Send parser type
+            formData.append('use_fast_parser', selectedParser === 'fast' ? 'true' : 'false');  // Keep for backward compatibility
+            
+            // Add Groq model if Groq parser is selected
+            if (selectedParser === 'groq') {
+                const groqModel = document.getElementById('groq-model').value;
+                formData.append('groq_model', groqModel);
+            }
+            
+            // Add LLM model if LLM parser is selected
+            if (selectedParser === 'llm') {
+                const llmModel = document.getElementById('llm-model').value;
+                formData.append('llm_model', llmModel);
+            }
             
             // Add schema if structured JSON
             if (selectedFormat === 'structured-json') {

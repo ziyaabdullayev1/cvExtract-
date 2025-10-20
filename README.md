@@ -4,19 +4,32 @@ A beautiful, modern web application for extracting structured data from CV/Resum
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
+### Option 1: Using Docker (Recommended)
+
+```bash
+# Using Docker Compose
+docker-compose up -d
+
+# The app will be available at http://localhost:5000
+```
+
+See [DOCKER.md](DOCKER.md) for detailed Docker deployment instructions.
+
+### Option 2: Manual Setup
+
+#### 1. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Start the Web Server
+#### 2. Start the Web Server
 
 ```bash
 python web_app.py
 ```
 
-### 3. Open Your Browser
+#### 3. Open Your Browser
 
 Navigate to: **http://localhost:5000**
 
