@@ -2,6 +2,10 @@
 pdfplumber==0.10.3
 pypdf==3.17.4
 flask==2.3.3
+flask-cors==4.0.0  # Enable CORS for cross-origin requests
+python-dotenv==1.0.0  # Load environment variables from .env file
+requests>=2.31.0  # HTTP client for API calls
+PyMuPDF>=1.23.0  # PyMuPDF (fitz) for fast PDF parsing
 
 # Production server
 gunicorn==21.2.0
