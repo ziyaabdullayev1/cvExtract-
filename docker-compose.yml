@@ -20,6 +20,11 @@ services:
       - MAX_CONTENT_LENGTH=16777216  # 16MB max file size
       - UPLOAD_FOLDER=/app/uploads
       - RESULTS_FOLDER=/app/results
+      # 🟢 ENV değişkenlerini container’a geçiriyoruz
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+    env_file:
+      - .env
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/"]
@@ -46,4 +51,3 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
