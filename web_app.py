@@ -8,6 +8,7 @@ import json
 import time
 from flask import Flask, render_template, request, jsonify, send_from_directory, Response
 from flask_cors import CORS
+from flasgger import Swagger, swag_from
 from werkzeug.utils import secure_filename
 from cv_parser import CVParser
 from cv_parser_fitz import CVParserFitz
@@ -38,6 +39,42 @@ CORS(app, resources={
     }
 })
 
+# Swagger configuration
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": 'apispec',
+            "route": '/apispec.json',
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/docs"
+}
+
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "CV Parser API",
+        "description": "AI-powered CV/Resume parsing API with multiple extraction engines (PyMuPDF, Groq AI, LLM, Docling). Extract structured data from PDF resumes including contact info, skills, experience, education, and more.",
+        "version": "1.0.0",
+        "contact": {
+            "name": "API Support",
+            "url": "http://192.168.1.114:5000",
+        }
+    },
+    "host": "192.168.1.114:5000",  # Change this to your server address
+    "basePath": "/",
+    "schemes": ["http", "https"],
+    "consumes": ["multipart/form-data", "application/json"],
+    "produces": ["application/json"],
+}
+
+swagger = Swagger(app, config=swagger_config, template=swagger_template)
+
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['RESULTS_FOLDER'] = 'results'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -61,7 +98,135 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    """Handle file upload and extraction"""
+    """
+    Upload and extract CV/Resume data
+    ---
+    tags:
+      - CV Extraction
+    consumes:
+      - multipart/form-data
+    parameters:
+      - name: file
+        in: formData
+        type: file
+        required: true
+        description: PDF file of the CV/Resume to parse
+      - name: parser_type
+        in: formData
+        type: string
+        required: false
+        default: original
+        enum: [original, fast, groq, llm, docling]
+        description: Parser engine to use (original=pdfplumber, fast=PyMuPDF, groq=Groq AI, llm=Ollama, docling=IBM Docling)
+      - name: format
+        in: formData
+        type: string
+        required: false
+        default: flat-json
+        enum: [flat-json, structured-json, markdown]
+        description: Output format (flat-json=standard, structured-json=custom schema, markdown=formatted text)
+      - name: groq_model
+        in: formData
+        type: string
+        required: false
+        default: llama-3.3-70b-versatile
+        enum: [llama-3.3-70b-versatile, llama3-70b-8192, mixtral-8x7b-32768, llama3-8b-8192]
+        description: Groq AI model to use (only for parser_type=groq)
+      - name: llm_model
+        in: formData
+        type: string
+        required: false
+        default: llama3.1
+        description: Ollama model to use (only for parser_type=llm)
+      - name: schema
+        in: formData
+        type: string
+        required: false
+        description: Custom JSON schema (only for format=structured-json)
+    responses:
+      200:
+        description: Successfully extracted CV data
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            filename:
+              type: string
+              example: "John_Doe_CV.pdf"
+            result_file:
+              type: string
+              example: "John_Doe_CV_extracted.json"
+            data:
+              type: object
+              properties:
+                file_name:
+                  type: string
+                personal_info:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    contact:
+                      type: object
+                      properties:
+                        email:
+                          type: string
+                        phone:
+                          type: string
+                        location:
+                          type: string
+                        linkedin:
+                          type: string
+                summary:
+                  type: string
+                skills:
+                  type: array
+                  items:
+                    type: string
+                experience:
+                  type: array
+                  items:
+                    type: object
+                education:
+                  type: array
+                  items:
+                    type: object
+                metadata:
+                  type: object
+            processing_time:
+              type: number
+              example: 2.45
+            processing_time_ms:
+              type: number
+              example: 2450
+            page_count:
+              type: integer
+              example: 2
+            format:
+              type: string
+              example: "flat-json"
+            parser_used:
+              type: string
+              example: "Groq (llama-3.3-70b-versatile)"
+      400:
+        description: Bad request (missing file, invalid format, etc.)
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "No file provided"
+      500:
+        description: Internal server error
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Processing error"
+    """
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
     
@@ -199,7 +364,28 @@ def upload_file():
 
 @app.route('/results/<filename>')
 def results(filename):
-    """Results page showing PDF preview and extracted data"""
+    """
+    Get extraction results page
+    ---
+    tags:
+      - Results
+    parameters:
+      - name: filename
+        in: path
+        type: string
+        required: true
+        description: Original PDF filename
+      - name: format
+        in: query
+        type: string
+        required: false
+        description: Output format used during extraction
+    responses:
+      200:
+        description: Results page HTML
+      404:
+        description: Results not found
+    """
     result_filename = filename.replace('.pdf', '_extracted.json')
     result_path = os.path.join(app.config['RESULTS_FOLDER'], result_filename)
     
@@ -250,7 +436,27 @@ def uploaded_file(filename):
 
 @app.route('/results/<filename>/download')
 def download_result(filename):
-    """Download extracted JSON data"""
+    """
+    Download extracted data as JSON
+    ---
+    tags:
+      - Download
+    parameters:
+      - name: filename
+        in: path
+        type: string
+        required: true
+        description: Original PDF filename
+    responses:
+      200:
+        description: JSON file download
+        content:
+          application/json:
+            schema:
+              type: object
+      404:
+        description: File not found
+    """
     result_filename = filename.replace('.pdf', '_extracted.json')
     return send_from_directory(app.config['RESULTS_FOLDER'], 
                               result_filename, 
@@ -259,7 +465,27 @@ def download_result(filename):
 
 @app.route('/results/<filename>/download/markdown')
 def download_markdown(filename):
-    """Download extracted data as Markdown"""
+    """
+    Download extracted data as Markdown
+    ---
+    tags:
+      - Download
+    parameters:
+      - name: filename
+        in: path
+        type: string
+        required: true
+        description: Original PDF filename
+    responses:
+      200:
+        description: Markdown file download
+        content:
+          text/markdown:
+            schema:
+              type: string
+      404:
+        description: File not found
+    """
     # Load JSON data
     result_filename = filename.replace('.pdf', '_extracted.json')
     result_path = os.path.join(app.config['RESULTS_FOLDER'], result_filename)

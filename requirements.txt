@@ -6,6 +6,7 @@ flask-cors==4.0.0  # Enable CORS for cross-origin requests
 python-dotenv==1.0.0  # Load environment variables from .env file
 requests>=2.31.0  # HTTP client for API calls
 PyMuPDF>=1.23.0  # PyMuPDF (fitz) for fast PDF parsing
+flasgger==0.9.7.1  # Swagger API documentation
 
 # Production server
 gunicorn==21.2.0
